@@ -1,4 +1,3 @@
+const authRoutes = require("./authRoutes");
 
-
-
-module.exports = { };
+module.exports = { authRoutes };
