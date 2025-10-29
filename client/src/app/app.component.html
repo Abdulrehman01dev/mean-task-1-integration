@@ -1,2 +1,8 @@
 <mat-toolbar color="primary">Sredi.io Integration Dashboard</mat-toolbar>
+
+<div *ngIf="(auth.loading$ | async)" class="app-loader-overlay">
+  <div class="app-loader-content">
+    <div class="spinner"></div>
+  </div>
+  </div>
 <router-outlet />

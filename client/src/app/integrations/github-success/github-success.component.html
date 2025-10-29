@@ -1,0 +1,27 @@
+    <section style="padding:24px;display:flex;justify-content:center">
+      <mat-card style="max-width:560px;width:100%;text-align:center;padding:24px" appearance="outlined">
+        <ng-container *ngIf="status==='loading'; else doneTpl">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <mat-icon style="font-size:64px;height:64px;width:64px;color:#616161">hourglass_empty</mat-icon>
+            <h2 style="margin:0">Completing connection…</h2>
+            <p style="margin:0;color:#616161">Please wait while we finalize your GitHub link.</p>
+          </div>
+        </ng-container>
+        <ng-template #doneTpl>
+          <div *ngIf="status==='success'; else errorBlock" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <mat-icon style="font-size:64px;height:64px;width:64px;color:#2e7d32">check_circle</mat-icon>
+            <h2 style="margin:0">GitHub connected</h2>
+            <p style="margin:0;color:#616161">Your GitHub account was successfully linked.</p>
+            <a mat-flat-button color="primary" routerLink="/integrations/github">Go to Integration</a>
+          </div>
+          <ng-template #errorBlock>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+              <mat-icon style="font-size:64px;height:64px;width:64px;color:#b71c1c">error</mat-icon>
+              <h2 style="margin:0">Connection failed</h2>
+              <p style="margin:0;color:#616161">Please try connecting again.</p>
+              <a mat-stroked-button color="primary" routerLink="/integrations/github">Back to Integration</a>
+            </div>
+          </ng-template>
+        </ng-template>
+      </mat-card>
+    </section>

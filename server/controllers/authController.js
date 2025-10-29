@@ -1,4 +1,5 @@
 const axios = require("axios");
+const GithubIntegration = require("../models/GithubIntegration");
 
 
 const connectWithGithub = async (req, res) => {
@@ -48,15 +49,28 @@ const githubOAuthCallback = async (req, res) => {
     const userData = userResponse.data || {};
     console.log("🚀 ~ githubOAuthCallback ~ userData:", userData)
 
-    // Will Save to MongoDb laterr on
-    // await Integration.create({
-    //   githubId: userData.id,
-    //   login: userData.login,
-    //   accessToken,
-    //   connectedAt: new Date()
-    // });
+    // Save or update integration in MongoDB
+    try {
+      await GithubIntegration.findOneAndUpdate(
+        { githubId: String(userData.id) },
+        {
+          githubId: String(userData.id),
+          login: userData.login,
+          name: userData.name,
+          avatar_url: userData.avatar_url,
+          accessToken: accessToken,
+          connectedAt: new Date()
+        },
+        { upsert: true, new: true }
+      );
+    } catch (dbErr) {
+      // continue even if DB write fails (keeping it simple)
+      console.error("GitHub integration DB save error:", dbErr?.message || dbErr);
+    }
 
-    return res.status(200).send(`${frontendUrl}/integrations/github?status=success`);
+    // Redirect to frontend with token so client can store it
+    return res.status(200).json({succes: true, token: accessToken});
+
   } catch (err) {
     console.error("GitHub OAuth error:", err?.response?.data || err?.message || err);
     return res.status(500).json({succes: false, message: 'Unable to authorize.'});
