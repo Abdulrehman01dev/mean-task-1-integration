@@ -63,9 +63,36 @@ const githubOAuthCallback = async (req, res) => {
   }
 }
 
+// Simple authenticate endpoint to check if a provided token is valid with GitHub
+const authenticate = async (req, res) => {
+  try {
+    // Token can come from Authorization: Bearer <token> or as ?token=<token>
+    const authHeader = req.headers.authorization || "";
+    const bearerMatch = authHeader.match(/^Bearer\s+(.*)$/i);
+    const token = bearerMatch?.[1] || req.query.token || req.body?.token;
+    console.log("🚀 ~ authenticate ~ token:", token)
+
+    if (!token) {
+      return res.status(200).json({ connected: false, reason: "missing_token" });
+    }
+
+    // Validate token by calling GitHub API
+    const userResponse = await axios.get("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const user = userResponse.data || null;
+    return res.status(200).json({ connected: true, user });
+  } catch (error) {
+    // If token invalid or any error, treat as not connected
+    return res.status(200).json({ connected: false, reason: "invalid_or_expired_token" });
+  }
+}
+
 module.exports = {
   connectWithGithub,
-  githubOAuthCallback
+  githubOAuthCallback,
+  authenticate,
 };
 
 
