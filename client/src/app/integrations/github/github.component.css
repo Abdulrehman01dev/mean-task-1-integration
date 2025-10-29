@@ -1,0 +1,51 @@
+.status-row {
+  display: flex;
+  align-items: center;
+}
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: #9e9e9e;
+}
+.status-indicator.connected {
+  background: #2e7d32;
+}
+.status-indicator.disconnected {
+  background: #b71c1c;
+}
+.status-text {
+  display: flex;
+  flex-direction: column;
+}
+.status-title {
+  font-weight: 600;
+}
+.status-sub {
+  color: #616161;
+  font-size: 12px;
+}
+.spacer {
+  flex: 1;
+}
+.panel-content {
+  padding: 8px 0;
+}
+.user-block {
+  margin-bottom: 8px;
+}
+.user-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.user-line {
+  color: #424242;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+}
+.muted {
+  color: #757575;
+}

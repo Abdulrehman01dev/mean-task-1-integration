@@ -58,6 +58,7 @@ const githubOAuthCallback = async (req, res) => {
           login: userData.login,
           name: userData.name,
           avatar_url: userData.avatar_url,
+          url: userData.url,
           accessToken: accessToken,
           connectedAt: new Date()
         },
@@ -80,28 +81,40 @@ const githubOAuthCallback = async (req, res) => {
 // Simple authenticate endpoint to check if a provided token is valid with GitHub
 const authenticate = async (req, res) => {
   try {
-    // Token can come from Authorization: Bearer <token> or as ?token=<token>
+    // Token
     const authHeader = req.headers.authorization || "";
     const bearerMatch = authHeader.match(/^Bearer\s+(.*)$/i);
     const token = bearerMatch?.[1] || req.query.token || req.body?.token;
+
+    if(!token){
+      return res.status(401).json({message: "No token provided!"});
+    }
     console.log("🚀 ~ authenticate ~ token:", token)
 
-    if (!token) {
-      return res.status(200).json({ connected: false, reason: "missing_token" });
+    // Checking if user exists in DB
+    const integration = await GithubIntegration.findOne({ accessToken: token } ).sort({ connectedAt: -1 });
+
+    if (!integration) {
+      return res.status(500).json({ connected: false });
     }
 
-    // Validate token by calling GitHub API
-    const userResponse = await axios.get("https://api.github.com/user", {
-      headers: { Authorization: `Bearer ${token}` },
+    // 2️⃣ Return data from DB (no GitHub API call here)
+    return res.status(200).json({
+      connected: true,
+      user: {
+        login: integration.login,
+        name: integration.name,
+        avatar_url: integration.avatar_url,
+        url: integration?.url,
+        connectedAt: integration.connectedAt,
+      },
     });
-
-    const user = userResponse.data || null;
-    return res.status(200).json({ connected: true, user });
   } catch (error) {
-    // If token invalid or any error, treat as not connected
-    return res.status(200).json({ connected: false, reason: "invalid_or_expired_token" });
+    console.error("Auth error:", error.message);
+    return res.status(200).json({ connected: false, reason: "error" });
   }
-}
+};
+
 
 module.exports = {
   connectWithGithub,

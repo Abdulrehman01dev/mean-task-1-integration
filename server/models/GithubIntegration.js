@@ -6,6 +6,7 @@ const GithubIntegrationSchema = new mongoose.Schema({
     name: String,
     avatar_url: String,
     accessToken: String,
+    url: String,
     connectedAt: { type: Date, default: Date.now },
     
 }, { timestamps: true });
