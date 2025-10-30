@@ -6,4 +6,7 @@ const routes = require("./index");
 // Auth routes
 router.use("/auth", routes.authRoutes);
 
+// Github Data routes
+router.use("/github", routes.githubDataRoutes);
+
 module.exports = router;

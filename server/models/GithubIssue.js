@@ -10,7 +10,7 @@ const GithubIssueSchema = new mongoose.Schema({
     login: String,
     avatar_url: String,
   },
-  labels: [String],
+  labels: [],
   comments: Number,
   created_at: Date,
   updated_at: Date,

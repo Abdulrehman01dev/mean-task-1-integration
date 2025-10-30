@@ -89,7 +89,6 @@ const authenticate = async (req, res) => {
     if(!token){
       return res.status(401).json({message: "No token provided!"});
     }
-    console.log("🚀 ~ authenticate ~ token:", token)
 
     // Checking if user exists in DB
     const integration = await GithubIntegration.findOne({ accessToken: token } ).sort({ connectedAt: -1 });
