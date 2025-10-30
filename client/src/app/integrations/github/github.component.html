@@ -64,7 +64,7 @@
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0px">
         <mat-form-field appearance="outline" style="width:260px">
           <mat-label>Entity</mat-label>
-          <mat-select [(value)]="selectedEntity" (selectionChange)="fetchData(true)">
+          <mat-select [(value)]="selectedEntity" (selectionChange)="onEntityChange()">
             <mat-option *ngFor="let e of entries" [value]="e.value">{{ e.name }}</mat-option>
           </mat-select>
         </mat-form-field>
@@ -84,7 +84,8 @@
         <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
           <th mat-header-cell *matHeaderCellDef> {{ column | titlecase }} </th>
           <td mat-cell *matCellDef="let element">
-            {{ element[column] || "N/A" }}
+            <span class="clamp-2lines">{{ element[column] || "N/A" }}</span>
+            
           </td>
         </ng-container>
 

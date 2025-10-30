@@ -34,7 +34,7 @@ const syncGithubData = async (req, res) => {
       for (const repo of repos) {
         // Commits
         const { data: commits = [] } = await gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`);
-        await GithubCommit.insertMany(commits.map(r => ({ ...r, createdBy })));
+        await GithubCommit.insertMany(commits.map(r => ({ ...r, message: r?.commit?.message, createdBy })));
 
         // Pull requests
         const { data: pulls = [] } = await gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`);
@@ -73,14 +73,15 @@ const getCollectionData = async (req, res) => {
   const Model = colMap[collection];
   if (!Model) return res.status(400).json({ error: "Invalid collection" });
 
-  const query = {};
+  let query = {};
 
+  console.log("🚀 ~ getCollectionData ~ search:", search)
   if (search) {
-    query.search =
+    query =
     {
       $or:
         [{ message: new RegExp(search, "i") }, { login: new RegExp(search, "i") }]
-    };
+    }
   }
 
 

@@ -60,7 +60,7 @@ export class GithubComponent implements OnInit {
   searchText: string = "";
   selectedEntity: string = "github_commits";
 
-  entries : {name: string, value: string}[] = [
+  entries: { name: string, value: string }[] = [
     { name: "Commits", value: "github_commits" },
     { name: "Repositories", value: "github_repos" },
     { name: "Pull Requests", value: "github_pulls" },
@@ -78,7 +78,7 @@ export class GithubComponent implements OnInit {
 
     this.githubService.connected$.subscribe(isConn => {
       this.isConnected = !!isConn;
-      if(isConn){
+      if (isConn) {
         this.fetchData(true);
       };
     });
@@ -117,14 +117,14 @@ export class GithubComponent implements OnInit {
   };
 
 
-  fetchData(updateColumns: boolean= false) {
+  fetchData(updateColumns: boolean = false) {
     // if (!this.selectedEntity) return;
     this.githubService.getGithubData(this.selectedEntity, this.pageIndex + 1, this.pageSize, this.searchText)
       .subscribe((res: any) => {
         this.totalCount = res.total || 0;
         this.dataSource.data = res.data;
-        
-        if(updateColumns){
+
+        if (updateColumns) {
           console.log('Columns are updating......');
           this.displayedColumns = Object.keys(res.data[0] || {}).slice(0, 10);
         };
@@ -134,17 +134,37 @@ export class GithubComponent implements OnInit {
   }
 
   applyFilter(value: string): void {
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.searchText = value.trim().toLowerCase();
+    this.pageIndex = 0;
+    this.fetchData(false);
   }
 
-
   onPageChange(event: PageEvent) {
-    // Handle page changes (e.g., fetch new data based on event.pageIndex and event.pageSize)
     console.log('Page event:', event);
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
     this.fetchData(false);
   }
+
+  onEntityChange() {
+    this.resetpagination(true);
+    this.fetchData(true);
+  };
+
+  resetpagination(resetQuery: boolean = false) {
+    this.totalCount = 0;
+    this.pageIndex = 0;
+    this.pageSize = 10;
+    if (resetQuery) {
+      this.searchText = "";
+    };
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+      this.paginator.pageSize = this.pageSize;
+    }
+  }
+
+
 }
 
 interface CommitRow {

@@ -49,3 +49,17 @@
 .muted {
   color: #757575;
 }
+
+
+
+.clamp-2lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  white-space: normal;
+  min-width: 60px;
+  max-width: 340px;
+}
