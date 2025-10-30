@@ -1,5 +1,6 @@
 const axios = require("axios");
 const GithubIntegration = require("../models/GithubIntegration");
+const { createGhApi } = require("../helpers/ghApi");
 
 
 const connectWithGithub = async (req, res) => {
@@ -40,11 +41,10 @@ const githubOAuthCallback = async (req, res) => {
     console.log("🚀 ~ githubOAuthCallback ~ accessToken:", accessToken)
     if (!accessToken) {
         return res.status(500).json({succes: false, message: 'Token is not authorize'});
-    }
+    };
 
-    const userResponse = await axios.get("https://api.github.com/user", {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const gh = createGhApi(accessToken);
+    const userResponse = await gh.get("/user");
 
     const userData = userResponse.data || {};
     console.log("🚀 ~ githubOAuthCallback ~ userData:", userData)

@@ -1,4 +1,3 @@
-const axios = require("axios");
 const GithubIntegration = require("../models/GithubIntegration");
 const GithubOrganization = require("../models/GithubOrganization");
 const GithubRepo = require("../models/GithubRepo");
@@ -6,6 +5,8 @@ const GithubCommit = require("../models/GithubCommit");
 const GithubPull = require("../models/GithubPull");
 const GithubIssue = require("../models/GithubIssue");
 const GithubUser = require("../models/GithubUser");
+const { createGhApi } = require("../helpers/ghApi");
+
 
 const syncGithubData = async (req, res) => {
   try {
@@ -15,34 +16,33 @@ const syncGithubData = async (req, res) => {
 
     const createdBy = login;
     const token = integration.accessToken;
-    const gh = axios.create({
-      baseURL: "https://api.github.com",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const gh = createGhApi(token);
 
-    // 1. Get aLl orgs
     const { data: orgs } = await gh.get("/user/orgs");
     console.log("🚀 ~ syncGithubData ~ org:", orgs)
-    await GithubOrganization.deleteMany({}); // optionallly clearing
+    await GithubOrganization.deleteMany({ createdBy });
     await GithubOrganization.insertMany(orgs.map(r => ({ ...r, createdBy })));
 
     // For each org I'm fetching repos
     for (const org of orgs) {
       const { data: repos = [] } = await gh.get(`/orgs/${org.login}/repos?per_page=100`);
-      await GithubRepo.insertMany(repos?.map(r => ({ ...r, createdBy })));
+      await GithubRepo.insertMany(repos.map((r) => ({ ...r, createdBy })));
 
       for (const repo of repos) {
-        // Commits
-        const { data: commits = [] } = await gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`);
-        await GithubCommit.insertMany(commits.map(r => ({ ...r, message: r?.commit?.message, createdBy })));
+        const [commits, pulls, issues] = await Promise.all([
+          gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`).then(r => r.data).catch(() => []),
+          gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`).then(r => r.data).catch(() => []),
+          gh.get(`/repos/${org.login}/${repo.name}/issues?state=all&per_page=100`).then(r => r.data).catch(() => []),
+        ]);
 
-        // Pull requests
-        const { data: pulls = [] } = await gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`);
-        await GithubPull.insertMany(pulls.map(r => ({ ...r, createdBy })));
+        if (commits.length)
+          await GithubCommit.insertMany(commits.map(r => ({ ...r, message: r?.commit?.message, createdBy })));
 
-        // Issues
-        const { data: issues = [] } = await gh.get(`/repos/${org.login}/${repo.name}/issues?state=all&per_page=100`);
-        await GithubIssue.insertMany(issues.map(r => ({ ...r, createdBy })));
+        if (pulls.length)
+          await GithubPull.insertMany(pulls.map(r => ({ ...r, createdBy })));
+
+        if (issues.length)
+          await GithubIssue.insertMany(issues.map(r => ({ ...r, createdBy })));
       }
     }
 
@@ -52,8 +52,8 @@ const syncGithubData = async (req, res) => {
 
     res.json({ message: "Sync is successfully completed" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message || 'Error syncing the github data' });
+    console.error("syncGithubData error:", err);
+    res.status(500).json({ error: err.message || "Error syncing GitHub data" });
   }
 };
 
