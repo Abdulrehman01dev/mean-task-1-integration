@@ -8,6 +8,7 @@ const GithubIntegrationSchema = new mongoose.Schema({
     accessToken: String,
     url: String,
     connectedAt: { type: Date, default: Date.now },
+    createdBy : String,
     
 }, { timestamps: true });
 

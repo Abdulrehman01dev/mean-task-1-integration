@@ -8,6 +8,7 @@ const GithubUserSchema = new mongoose.Schema({
   type: String,
   site_admin: Boolean,
   html_url: String,
+  createdBy : String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("GithubUser", GithubUserSchema, "github_users");

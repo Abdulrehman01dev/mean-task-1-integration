@@ -13,6 +13,7 @@ const syncGithubData = async (req, res) => {
     const integration = await GithubIntegration.findOne({ login });
     if (!integration) return res.status(404).json({ error: "Integration not found" });
 
+    const createdBy = login;
     const token = integration.accessToken;
     const gh = axios.create({
       baseURL: "https://api.github.com",
@@ -23,26 +24,25 @@ const syncGithubData = async (req, res) => {
     const { data: orgs } = await gh.get("/user/orgs");
     console.log("🚀 ~ syncGithubData ~ org:", orgs)
     await GithubOrganization.deleteMany({}); // optionallly clearing
-    await GithubOrganization.insertMany(orgs);
+    await GithubOrganization.insertMany(orgs.map(r => ({ ...r, createdBy })));
 
     // For each org I'm fetching repos
     for (const org of orgs) {
-      const { data: repos } = await gh.get(`/orgs/${org.login}/repos?per_page=100`);
-      await GithubRepo.insertMany(repos);
+      const { data: repos = [] } = await gh.get(`/orgs/${org.login}/repos?per_page=100`);
+      await GithubRepo.insertMany(repos?.map(r => ({ ...r, createdBy })));
 
       for (const repo of repos) {
         // Commits
-        const { data: commits } = await gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`);
-        await GithubCommit.insertMany(commits);
+        const { data: commits = [] } = await gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`);
+        await GithubCommit.insertMany(commits.map(r => ({ ...r, createdBy })));
 
         // Pull requests
-        const { data: pulls } = await gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`);
-        await GithubPull.insertMany(pulls);
+        const { data: pulls = [] } = await gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`);
+        await GithubPull.insertMany(pulls.map(r => ({ ...r, createdBy })));
 
         // Issues
-        const { data: issues } = await gh.get(`/repos/${org.login}/${repo.name}/issues?state=all&per_page=100`);
-        console.log("🚀 ~ syncGithubData ~ issues:", issues)
-        await GithubIssue.insertMany(issues);
+        const { data: issues = [] } = await gh.get(`/repos/${org.login}/${repo.name}/issues?state=all&per_page=100`);
+        await GithubIssue.insertMany(issues.map(r => ({ ...r, createdBy })));
       }
     }
 
@@ -68,6 +68,7 @@ const getCollectionData = async (req, res) => {
     github_issues: GithubIssue,
     github_pulls: GithubPull,
     github_users: GithubUser,
+    github_organizations: GithubOrganization,
   };
   const Model = colMap[collection];
   if (!Model) return res.status(400).json({ error: "Invalid collection" });

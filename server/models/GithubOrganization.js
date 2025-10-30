@@ -12,6 +12,7 @@ const GithubOrganizationSchema = new mongoose.Schema({
   type: String,
   created_at: Date,
   updated_at: Date,
+  createdBy : String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("GithubOrganization", GithubOrganizationSchema, "github_organizations");

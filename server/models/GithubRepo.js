@@ -18,6 +18,7 @@ const GithubRepoSchema = new mongoose.Schema({
   stargazers_count: Number,
   watchers_count: Number,
   default_branch: String,
+  createdBy : String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("GithubRepo", GithubRepoSchema, "github_repos");

@@ -15,6 +15,7 @@ const GithubIssueSchema = new mongoose.Schema({
   created_at: Date,
   updated_at: Date,
   closed_at: Date,
+  createdBy : String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("GithubIssue", GithubIssueSchema, "github_issues");

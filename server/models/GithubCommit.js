@@ -15,6 +15,7 @@ const GithubCommitSchema = new mongoose.Schema({
   },
   message: String,
   html_url: String,
+  createdBy : String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("GithubCommit", GithubCommitSchema, "github_commits");

@@ -13,6 +13,7 @@ const GithubPullSchema = new mongoose.Schema({
   created_at: Date,
   updated_at: Date,
   merged_at: Date,
+  createdBy : String,
 }, { timestamps: true });
 
 module.exports = mongoose.model("GithubPull", GithubPullSchema, "github_pulls");
