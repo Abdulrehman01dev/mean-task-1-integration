@@ -10,7 +10,7 @@ const { createGhApi } = require("../helpers/ghApi");
 
 const syncGithubData = async (req, res) => {
   try {
-    const createdBy = req.login;
+    const createdBy = req.integration.login;
     const token = req.integration.accessToken;
     const gh = createGhApi(token);
 
@@ -90,7 +90,25 @@ const getCollectionData = async (req, res) => {
 };
 
 
+const removeIntegration = async (req, res) => {
+  const login = req.integration.login;
+
+  await GithubIntegration.deleteOne({ login });
+  // also clear all user-specific data
+  await Promise.all([
+    GithubRepo.deleteMany({ createdBy: login }),
+    GithubCommit.deleteMany({ createdBy: login }),
+    GithubIssue.deleteMany({ createdBy: login }),
+    GithubPull.deleteMany({ createdBy: login }),
+    GithubOrganization.deleteMany({ createdBy: login }),
+    GithubUser.deleteMany({ createdBy: login })
+  ]);
+  res.json({ message: "Integration removed successfully" });
+};
+
+
 module.exports = {
   syncGithubData,
-  getCollectionData
+  getCollectionData,
+  removeIntegration
 }

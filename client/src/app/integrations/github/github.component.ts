@@ -99,14 +99,12 @@ export class GithubComponent implements OnInit {
   }
 
   removeIntegration(): void {
-    this.isConnected = false;
-    this.connectedUser = {
-      url: "",
-      login: "",
-      connectedAt: undefined,
-    };
-    localStorage.removeItem('githubIntegration');
-    localStorage.removeItem('githubToken');
+    this.githubService.removeIntegration().subscribe(() => {
+      this.isConnected = false;
+      this.connectedUser = { url: "", login: "", connectedAt: undefined };
+      this.dataSource.data = [];
+      localStorage.removeItem('githubToken');
+    });
   }
 
   resync(): void {

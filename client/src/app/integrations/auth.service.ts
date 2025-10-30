@@ -41,6 +41,7 @@ export class AuthService {
     return this.http.get<{ connected: boolean; user?: any; reason?: string }>(`${this.baseUrl}/auth/authenticate`, { headers });
   }
 
+
   initializeOnAppLoad() {
     this.loadingSubject.next(true);
     return this.authenticate().pipe(
@@ -48,10 +49,6 @@ export class AuthService {
         if (res?.connected) {
           this.connectedSubject.next(true);
           this.userSubject.next(res.user || null);
-          // also keeping simple cache for existing UI usage
-          const connectedAt = new Date().toISOString();
-          const connectedUser = res.user ? { name: res.user.name, login: res.user.login } : undefined;
-          localStorage.setItem('githubIntegration', JSON.stringify({ isConnected: true, connectedAt, connectedUser }));
         } else {
           this.connectedSubject.next(false);
           this.userSubject.next(null);
@@ -69,7 +66,8 @@ export class AuthService {
 
   setToken(token: string): void {
     localStorage.setItem('githubToken', token);
-  }
+  };
+
 
   getToken(): string | null {
     return localStorage.getItem('githubToken');
@@ -89,6 +87,14 @@ export class AuthService {
     const token = this.getToken();
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
     return this.http.post(`${this.baseUrl}/github/resync`, {}, { headers });
-  }
+  };
+  
+
+  removeIntegration() {
+    const token = this.getToken();
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    return this.http.delete(`${this.baseUrl}/github/remove`,  { headers });
+  };
+  
 
 }
