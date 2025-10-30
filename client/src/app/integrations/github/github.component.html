@@ -66,79 +66,17 @@
 
     <div style="overflow:auto;margin-top:8px">
       <table mat-table [dataSource]="dataSource" matSort style="min-width:1200px">
-        <ng-container matColumnDef="select">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let row"><mat-checkbox></mat-checkbox></td>
-        </ng-container>
-
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header> id </th>
-          <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="hash">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header> Hash </th>
-          <td mat-cell *matCellDef="let row"> {{ row.hash }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="branch">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
-          <td mat-cell *matCellDef="let row"> {{ row.branch }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="message">
-          <th mat-header-cell *matHeaderCellDef> Message </th>
-          <td mat-cell *matCellDef="let row">
-            <div style="max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ row.message }}</div>
+        <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
+          <th mat-header-cell *matHeaderCellDef> {{ column | titlecase }} </th>
+          <td mat-cell *matCellDef="let element">
+            {{ element[column] }}
           </td>
-        </ng-container>
-
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header> Date </th>
-          <td mat-cell *matCellDef="let row"> {{ row.date | date:'medium' }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="repoName">
-          <th mat-header-cell *matHeaderCellDef> Repository Name </th>
-          <td mat-cell *matCellDef="let row"> {{ row.repoName }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="repoUid">
-          <th mat-header-cell *matHeaderCellDef> Repository Uid </th>
-          <td mat-cell *matCellDef="let row"> {{ row.repoUid }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="authorUid">
-          <th mat-header-cell *matHeaderCellDef> Author Uid </th>
-          <td mat-cell *matCellDef="let row"> {{ row.authorUid }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="authorName">
-          <th mat-header-cell *matHeaderCellDef> Author Name </th>
-          <td mat-cell *matCellDef="let row"> {{ row.authorName }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="pullrequest">
-          <th mat-header-cell *matHeaderCellDef> Pullrequest </th>
-          <td mat-cell *matCellDef="let row"> {{ row.pullrequest || '—' }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="url">
-          <th mat-header-cell *matHeaderCellDef> Url </th>
-          <td mat-cell *matCellDef="let row">
-            <a href="{{ row.url }}" target="_blank" rel="noreferrer">link</a>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="checksum">
-          <th mat-header-cell *matHeaderCellDef> Checksum </th>
-          <td mat-cell *matCellDef="let row"> {{ row.checksum }} </td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
     </div>
-    <mat-paginator [pageSize]="10" [pageSizeOptions]="[10,25,50,100]"></mat-paginator>
+    <mat-paginator [pageSize]="pageSize" [pageSizeOptions]="[10,25,50,100]" [length]="totalCount" (page)="onPageChange($event)"></mat-paginator>
   </mat-card>
 </section>

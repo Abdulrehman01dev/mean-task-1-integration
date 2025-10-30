@@ -7,7 +7,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -42,23 +42,45 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class GithubComponent implements OnInit {
   isConnected = false;
-  connectedUser?: { url: string; login: string, connectedAt: Date};
+  connectedUser: { url: string; login: string, connectedAt: Date | undefined } = {
+    url: "",
+    login: "",
+    connectedAt: undefined,
+  }
 
   // Dummy grid data
   displayedColumns: string[] = [
     'select', 'id', 'hash', 'branch', 'message', 'date', 'repoName', 'repoUid', 'authorUid', 'authorName', 'pullrequest', 'url', 'checksum'
   ];
+
   dataSource = new MatTableDataSource<CommitRow>([]);
+  totalCount: number = 0;
+  pageIndex: number = 0;
+  pageSize: number = 10;
+  searchText: string = "";
+  selectedEntity: string = "github_commits";
+
+  entries : {name: string, value: string}[] = [
+    { name: "Commits", value: "github_commits" },
+    { name: "Repositories", value: "github_repos" },
+    { name: "Pull Requests", value: "github_pulls" },
+    { name: "Issues", value: "github_issues" },
+    { name: "Users", value: "github_users" },
+    { name: "Organizations", value: "github_organizations" },
+  ]
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private githubService: AuthService, private route: ActivatedRoute, private router: Router) {}
+  constructor(private githubService: AuthService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
 
     this.githubService.connected$.subscribe(isConn => {
       this.isConnected = !!isConn;
+      if(isConn){
+        this.fetchData(true);
+      };
     });
 
     this.githubService.user$.subscribe(user => {
@@ -69,7 +91,7 @@ export class GithubComponent implements OnInit {
     });
 
     // seed dummy rows
-    this.dataSource.data = this.generateDummyRows(100);
+    // this.dataSource.data = this.generateDummyRows(100);
   }
 
   connect(): void {
@@ -78,43 +100,50 @@ export class GithubComponent implements OnInit {
 
   removeIntegration(): void {
     this.isConnected = false;
-    this.connectedUser = undefined;
+    this.connectedUser = {
+      url: "",
+      login: "",
+      connectedAt: undefined,
+    };
     localStorage.removeItem('githubIntegration');
     localStorage.removeItem('githubToken');
   }
 
   resync(): void {
-    // UI-only, no-op placeholder
+    this.githubService.resyncIntegration(this.connectedUser.login).subscribe((res) => {
+      console.log("🚀 ~ GithubComponent ~ resync ~ res:", res)
+      this.fetchData(true);
+    });
+  };
+
+
+  fetchData(updateColumns: boolean= false) {
+    // if (!this.selectedEntity) return;
+    this.githubService.getGithubData(this.selectedEntity, this.pageIndex + 1, this.pageSize, this.searchText)
+      .subscribe((res: any) => {
+        this.totalCount = res.total || 0;
+        this.dataSource.data = res.data;
+        
+        if(updateColumns){
+          console.log('Columns are updating......');
+          this.displayedColumns = Object.keys(res.data[0] || {}).slice(0, 10);
+        };
+
+        console.log("🚀 ~ GithubComponent ~ fetchData ~ totalCount:", this.totalCount)
+      });
   }
 
   applyFilter(value: string): void {
     this.dataSource.filter = value.trim().toLowerCase();
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-  }
 
-  private generateDummyRows(count: number): CommitRow[] {
-    const rows: CommitRow[] = [];
-    for (let i = 1; i <= count; i++) {
-      rows.push({
-        id: `c-${1000 + i}`,
-        hash: Math.random().toString(16).slice(2, 10) + Math.random().toString(16).slice(2, 10),
-        branch: i % 3 === 0 ? 'main' : i % 3 === 1 ? 'develop' : 'feature/ui-grid',
-        message: `Refactor module ${i} and update docs`,
-        date: new Date(Date.now() - i * 86400000).toISOString(),
-        repoName: 'angular',
-        repoUid: `${900000 + i}`,
-        authorUid: `${170000 + i}`,
-        authorName: i % 2 ? 'alex.g' : 'sara.k',
-        pullrequest: i % 4 === 0 ? `#${200 + i}` : '',
-        url: `https://github.com/example/repo/commit/${i}`,
-        checksum: Math.random().toString(36).slice(2, 10)
-      });
-    }
-    return rows;
+  onPageChange(event: PageEvent) {
+    // Handle page changes (e.g., fetch new data based on event.pageIndex and event.pageSize)
+    console.log('Page event:', event);
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.fetchData(false);
   }
 }
 
