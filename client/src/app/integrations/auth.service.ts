@@ -75,4 +75,21 @@ export class AuthService {
     return localStorage.getItem('githubToken');
   }
 
+
+  getGithubData(collection: string, page = 1, limit = 10, search = '') {
+    const token = this.getToken();
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    return this.http.get(`${this.baseUrl}/github/data/${collection}`, {
+      headers,
+      params: { page, limit, search },
+    });
+  }
+  
+  resyncIntegration(login: string) {
+    console.log("🚀 ~ AuthService ~ resyncIntegration ~ login:", login)
+    const token = this.getToken();
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    return this.http.post(`${this.baseUrl}/github/resync/${login}`, {headers});
+  }
+
 }
