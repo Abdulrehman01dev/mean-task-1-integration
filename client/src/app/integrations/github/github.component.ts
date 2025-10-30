@@ -110,7 +110,7 @@ export class GithubComponent implements OnInit {
   }
 
   resync(): void {
-    this.githubService.resyncIntegration(this.connectedUser.login).subscribe((res) => {
+    this.githubService.resyncIntegration().subscribe((res) => {
       console.log("🚀 ~ GithubComponent ~ resync ~ res:", res)
       this.fetchData(true);
     });

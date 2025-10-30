@@ -85,11 +85,10 @@ export class AuthService {
     });
   }
   
-  resyncIntegration(login: string) {
-    console.log("🚀 ~ AuthService ~ resyncIntegration ~ login:", login)
+  resyncIntegration() {
     const token = this.getToken();
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    return this.http.post(`${this.baseUrl}/github/resync/${login}`, {headers});
+    return this.http.post(`${this.baseUrl}/github/resync`, {}, { headers });
   }
 
 }

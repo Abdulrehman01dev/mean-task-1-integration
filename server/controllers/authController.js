@@ -81,23 +81,14 @@ const githubOAuthCallback = async (req, res) => {
 // Simple authenticate endpoint to check if a provided token is valid with GitHub
 const authenticate = async (req, res) => {
   try {
-    // Token
-    const authHeader = req.headers.authorization || "";
-    const bearerMatch = authHeader.match(/^Bearer\s+(.*)$/i);
-    const token = bearerMatch?.[1] || req.query.token || req.body?.token;
 
-    if(!token){
-      return res.status(401).json({message: "No token provided!"});
-    }
-
-    // Checking if user exists in DB
-    const integration = await GithubIntegration.findOne({ accessToken: token } ).sort({ connectedAt: -1 });
+    const integration = req.integration;
 
     if (!integration) {
-      return res.status(500).json({ connected: false });
+      return res.status(401).json({ connected: false });
     }
 
-    // 2️⃣ Return data from DB (no GitHub API call here)
+    //  Return data
     return res.status(200).json({
       connected: true,
       user: {
@@ -110,7 +101,7 @@ const authenticate = async (req, res) => {
     });
   } catch (error) {
     console.error("Auth error:", error.message);
-    return res.status(200).json({ connected: false, reason: "error" });
+    return res.status(401).json({ connected: false, reason: "error" });
   }
 };
 

@@ -10,12 +10,8 @@ const { createGhApi } = require("../helpers/ghApi");
 
 const syncGithubData = async (req, res) => {
   try {
-    const { login } = req.params;
-    const integration = await GithubIntegration.findOne({ login });
-    if (!integration) return res.status(404).json({ error: "Integration not found" });
-
-    const createdBy = login;
-    const token = integration.accessToken;
+    const createdBy = req.login;
+    const token = req.integration.accessToken;
     const gh = createGhApi(token);
 
     const { data: orgs } = await gh.get("/user/orgs");
@@ -75,7 +71,6 @@ const getCollectionData = async (req, res) => {
 
   let query = {};
 
-  console.log("🚀 ~ getCollectionData ~ search:", search)
   if (search) {
     query =
     {
@@ -90,7 +85,6 @@ const getCollectionData = async (req, res) => {
     .limit(Number(limit))
     .skip((page - 1) * limit)
     .lean();
-  console.log("🚀 ~ getCollectionData ~ data:", data)
 
   res.json({ data, total });
 };
