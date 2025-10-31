@@ -63,6 +63,13 @@
       <span class="spacer"></span>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0px">
         <mat-form-field appearance="outline" style="width:260px">
+          <mat-label>Active Integration</mat-label>
+          <mat-select [(value)]="selectedActiveIntegration" (selectionChange)="onActiveIntegrationChange()">
+            <mat-option *ngFor="let a of activeIntegrations" [value]="a.value">{{ a.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:260px">
           <mat-label>Entity</mat-label>
           <mat-select [(value)]="selectedEntity" (selectionChange)="onEntityChange()">
             <mat-option *ngFor="let e of entries" [value]="e.value">{{ e.name }}</mat-option>

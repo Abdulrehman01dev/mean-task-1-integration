@@ -59,6 +59,7 @@ export class GithubComponent implements OnInit {
   pageSize: number = 10;
   searchText: string = "";
   selectedEntity: string = "github_commits";
+  selectedActiveIntegration: string = "github";
 
   entries: { name: string, value: string }[] = [
     { name: "Commits", value: "github_commits" },
@@ -68,6 +69,10 @@ export class GithubComponent implements OnInit {
     { name: "Users", value: "github_users" },
     { name: "Organizations", value: "github_organizations" },
   ]
+
+  activeIntegrations: { name: string, value: string }[] = [
+    { name: 'GitHub', value: 'github' }
+  ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -148,6 +153,10 @@ export class GithubComponent implements OnInit {
     this.resetpagination(true);
     this.fetchData(true);
   };
+
+  onActiveIntegrationChange() {
+    // static list for now 
+  }
 
   resetpagination(resetQuery: boolean = false) {
     this.totalCount = 0;
