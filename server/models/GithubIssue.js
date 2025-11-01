@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const GithubIssueSchema = new mongoose.Schema({
   issue_number: Number,
   repoName: String,
+  orgName: String,
   title: String,
   body: String,
   state: String,

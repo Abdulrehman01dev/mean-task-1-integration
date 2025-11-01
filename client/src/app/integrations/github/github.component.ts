@@ -59,7 +59,7 @@ export class GithubComponent implements OnInit {
   ];
 
   dataSource = new MatTableDataSource<CommitRow>([]);
-  isLoading: boolean = true;
+  isLoading: boolean = false;
   totalCount: number = 0;
   pageIndex: number = 0;
   pageSize: number = 10;

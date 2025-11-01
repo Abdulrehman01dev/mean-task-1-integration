@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const GithubPullSchema = new mongoose.Schema({
   pull_number: Number,
   repoName: String,
+  orgName: String,
   title: String,
   state: String,           // open, closed, merged
   html_url: String,

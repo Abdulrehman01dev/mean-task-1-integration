@@ -22,14 +22,19 @@ const syncGithubData = catchAsync(async (req, res) => {
     const gh = createGhApi(token);
 
     const { data: orgs } = await gh.get("/user/orgs");
-    console.log("🚀 ~ syncGithubData ~ org:", orgs)
+    console.log("🚀 ~ syncGithubData ~ total org:", orgs.length);
+
     await GithubOrganization.deleteMany({ createdBy });
-    await GithubOrganization.insertMany(orgs.map(r => ({ ...r, createdBy })));
+    if (orgs.length) {
+      await GithubOrganization.insertMany(orgs.map(o => ({ ...o, createdBy })));
+    } else {
+      return res.status(404).json({ message: "No organizations were found!" });
+    }
 
     // For each org I'm fetching repos
     for (const org of orgs) {
-      const { data: repos = [] } = await gh.get(`/orgs/${org.login}/repos?per_page=100`);
-      await GithubRepo.insertMany(repos.map((r) => ({ ...r, createdBy })));
+      const { data: repos = [] } = await gh.get(`/orgs/${org.login}/repos?per_page=100`).catch(() => ({ data: [] }));
+      if (repos.length) await GithubRepo.insertMany(repos.map(r => ({ ...r, createdBy })));
 
       for (const repo of repos) {
         const [commits, pulls, issues, changelogs ] = await Promise.all([
@@ -39,23 +44,49 @@ const syncGithubData = catchAsync(async (req, res) => {
           gh.get(`/repos/${org.login}/${repo.name}/issues/events?per_page=100`).then(r => r.data).catch(() => []),
         ]);
 
-        if (commits.length)
-          await GithubCommit.insertMany(commits.map(r => ({ ...r, message: r?.commit?.message, createdBy })));
+        const userMap = new Map();
 
-        if (pulls.length)
-          await GithubPull.insertMany(pulls.map(r => ({ ...r, createdBy })));
+        if (commits.length) {
+          commits.forEach(c => {
+            if (c.author?.login)
+              userMap.set(c.author.login, { login: c.author.login, avatar_url: c.author.avatar_url, source: "commit", createdBy });
+            if (c.committer?.login)
+              userMap.set(c.committer.login, { login: c.committer.login, avatar_url: c.committer.avatar_url, source: "commit", createdBy });
+          });
+          await GithubCommit.insertMany(commits.map(r => ({ ...r, message: r?.commit?.message, repoName: repo.name, orgName: org.login, createdBy })), { ordered: false });
+        }
 
-        if (issues.length)
-          await GithubIssue.insertMany(issues.map(r => ({ ...r, createdBy })));
+        if (pulls.length) {
+          pulls.forEach(p => {
+            if (p.user?.login)
+              userMap.set(p.user.login, { login: p.user.login, avatar_url: p.user.avatar_url, source: "pull", createdBy });
+          });
+          await GithubPull.insertMany(pulls.map(r => ({ ...r, createdBy, repoName: repo.name, orgName: org.login, })), { ordered: false });
+        }
+
+        if (issues.length) {
+          issues.forEach(i => {
+            if (i.user?.login)
+              userMap.set(i.user.login, { login: i.user.login, avatar_url: i.user.avatar_url, source: "issue", createdBy });
+          });
+          await GithubIssue.insertMany(issues.map(r => ({ ...r, createdBy, repoName: repo.name, orgName: org.login, })), { ordered: false });
+        };
 
         if (changelogs.length)
-          await GithubIssueChangelog.insertMany(changelogs.map(r => ({ ...r, createdBy })));
+          await GithubIssueChangelog.insertMany(changelogs.map(ev => ({
+            ...ev,
+            repoName: repo.name,
+            orgName: org.login,
+            createdBy,
+          })),
+            { ordered: false }
+          );
+
+        // After all orgs/repos finished:
+        const users = Array.from(userMap.values());
+        if (users.length) await GithubUser.insertMany(users, { ordered: false });
       }
     }
-
-    // Lastly,  Users ( extracting unique user objects from commits)
-    const users = [];
-    await GithubUser.insertMany(users);
 
     res.json({ message: "Sync is successfully completed" });
   } catch (err) {
@@ -63,6 +94,7 @@ const syncGithubData = catchAsync(async (req, res) => {
     res.status(500).json({ error: err.message || "Error syncing GitHub data" });
   }
 });
+
 
 
 const getCollectionData = catchAsync(async (req, res) => {
@@ -135,7 +167,8 @@ const removeIntegration = catchAsync(async (req, res) => {
     GithubIssue.deleteMany({ createdBy: login }),
     GithubPull.deleteMany({ createdBy: login }),
     GithubOrganization.deleteMany({ createdBy: login }),
-    GithubUser.deleteMany({ createdBy: login })
+    GithubUser.deleteMany({ createdBy: login }),
+    GithubIssueChangelog.deleteMany({ createdBy: login })
   ]);
   res.json({ message: "Integration removed successfully" });
 });

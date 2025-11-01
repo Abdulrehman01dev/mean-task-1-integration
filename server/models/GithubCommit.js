@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const GithubCommitSchema = new mongoose.Schema({
   sha: String,
   repoName: String,
+  orgName: String,
   author: {
     name: String,
     email: String,
