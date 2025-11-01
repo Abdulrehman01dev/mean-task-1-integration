@@ -18,6 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ViewChild } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-github',
@@ -70,6 +71,7 @@ export class GithubComponent implements OnInit {
   filters: Record<string, any> = {};
   filterRows: { field: string; value: string }[] = [];
   availableFields: string[] = [];
+  searchSubject = new Subject<string>();
 
   entries: { name: string, value: string }[] = [
     { name: "Commits", value: "github_commits" },
@@ -91,6 +93,13 @@ export class GithubComponent implements OnInit {
 
   ngOnInit(): void {
 
+    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe(value => {
+      this.searchText = value.trim().toLowerCase();
+      this.pageIndex = 0;
+      this.fetchData(false);
+    });
+
+
     this.githubService.connected$.subscribe(isConn => {
       this.isConnected = !!isConn;
       if (isConn) {
@@ -104,9 +113,6 @@ export class GithubComponent implements OnInit {
         this.connectedUser = { url: user.url, login: user.login, connectedAt: user?.connectedAt };
       }
     });
-
-    // seed dummy rows
-    // this.dataSource.data = this.generateDummyRows(100);
   }
 
   onConnect(): void {
@@ -153,10 +159,8 @@ export class GithubComponent implements OnInit {
   }
 
 
-  applyFilter(value: string): void {
-    this.searchText = value.trim().toLowerCase();
-    this.pageIndex = 0;
-    this.fetchData(false);
+  onApplyFilter(value: string): void {
+    this.searchSubject.next(value);
   }
 
   onPageChange(event: PageEvent) {
