@@ -6,9 +6,15 @@ const GithubPull = require("../models/GithubPull");
 const GithubIssue = require("../models/GithubIssue");
 const GithubUser = require("../models/GithubUser");
 const { createGhApi } = require("../helpers/ghApi");
+const catchAsync = require("../helpers/catchAsync");
 
 
-const syncGithubData = async (req, res) => {
+const isDateField = (field) => {
+  const commonFields = ['updated_at', 'created_at', 'createdAt', 'updatedAt', 'merged_at', 'pushed_at', 'user', 'labels',]
+  return commonFields.includes(field?.toString()?.trim())
+}
+
+const syncGithubData = catchAsync(async (req, res) => {
   try {
     const createdBy = req.integration.login;
     const token = req.integration.accessToken;
@@ -51,15 +57,15 @@ const syncGithubData = async (req, res) => {
     console.error("syncGithubData error:", err);
     res.status(500).json({ error: err.message || "Error syncing GitHub data" });
   }
-};
+});
 
 
-const getCollectionData = async (req, res) => {
+const getCollectionData = catchAsync(async (req, res) => {
   const { collection } = req.params;
   const { page = 1, limit = 10, search = "", sortField = "_id", sortDir = "desc", filters } = req.query;
   const createdBy = req.integration.login;
 
-  
+
   const colMap = {
     github_commits: GithubCommit,
     github_repos: GithubRepo,
@@ -71,15 +77,34 @@ const getCollectionData = async (req, res) => {
   const Model = colMap[collection];
   if (!Model) return res.status(400).json({ error: "Invalid collection" });
 
+
+  let query = { createdBy };
+
+
   const filterObj = filters ? JSON.parse(filters) : {};
-  let query = {createdBy, ...filterObj};
+
+  if (Object.keys(filterObj)?.length > 0) {
+    Object.keys(filterObj).forEach((key, i) => {
+      const value = filterObj[key];
+      const regex = new RegExp(value, "i");
+      if (!isNaN(Date.parse(value))) {
+        query[key] = value;
+      }
+      else if (!isNaN(value) && value.trim() !== "") {
+        query[key] = Number(value);
+      }
+      else {
+        query[key] = regex;
+      }
+    });
+  };
 
   if (search) {
     const regex = new RegExp(search, "i");
     query.$or = [{ login: regex }, { message: regex }, { name: regex }, { title: regex }];
   };
 
-  console.log("🚀 ~ getCollectionData ~ query and Collection:", query +"--------------"+ collection)
+  console.log("🚀 ~ getCollectionData ~ query and Collection:", JSON.stringify(query) + "--------------" + collection)
 
 
   const total = await Model.countDocuments(query);
@@ -89,11 +114,11 @@ const getCollectionData = async (req, res) => {
     .limit(Number(limit))
     .lean();
 
-  res.json({ data, total });
-};
+  res.status(200).json({ data, total });
+});
 
 
-const removeIntegration = async (req, res) => {
+const removeIntegration = catchAsync(async (req, res) => {
   const login = req.integration.login;
 
   await GithubIntegration.deleteOne({ login });
@@ -107,7 +132,7 @@ const removeIntegration = async (req, res) => {
     GithubUser.deleteMany({ createdBy: login })
   ]);
   res.json({ message: "Integration removed successfully" });
-};
+});
 
 
 module.exports = {

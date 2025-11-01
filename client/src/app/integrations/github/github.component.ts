@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -24,6 +25,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     CommonModule,
     NgIf,
     DatePipe,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatExpansionModule,
@@ -65,6 +67,9 @@ export class GithubComponent implements OnInit {
   sortDir: string = "desc";
   selectedEntity: string = "github_commits";
   selectedActiveIntegration: string = "github";
+  filters: Record<string, any> = {};
+  filterRows: { field: string; value: string }[] = [];
+  availableFields: string[] = [];
 
   entries: { name: string, value: string }[] = [
     { name: "Commits", value: "github_commits" },
@@ -104,11 +109,11 @@ export class GithubComponent implements OnInit {
     // this.dataSource.data = this.generateDummyRows(100);
   }
 
-  connect(): void {
+  onConnect(): void {
     this.githubService.connectGithub();
   }
 
-  removeIntegration(): void {
+  onRemoveIntegration(): void {
     this.githubService.removeIntegration().subscribe(() => {
       this.isConnected = false;
       this.connectedUser = { url: "", login: "", connectedAt: undefined };
@@ -117,17 +122,16 @@ export class GithubComponent implements OnInit {
     });
   }
 
-  resync(): void {
+  onResync(): void {
     this.githubService.resyncIntegration().subscribe((res) => {
-      console.log("🚀 ~ GithubComponent ~ resync ~ res:", res)
       this.fetchData(true);
     });
   };
 
   fetchData(updateColumns: boolean = false) {
-    // if (!this.selectedEntity) return;
+    if (!this.selectedEntity) return;
     this.isLoading = true;
-    this.githubService.getGithubData(this.selectedEntity, this.pageIndex + 1, this.pageSize, this.searchText, this.sortField, this.sortDir).pipe()
+    this.githubService.getGithubData(this.selectedEntity, this.pageIndex + 1, this.pageSize, this.searchText, this.sortField, this.sortDir, this.filters).pipe()
       .subscribe({
         next: (res: any) => {
           console.log("🚀 ~ GithubComponent ~ fetchData ~ res:", res)
@@ -135,10 +139,11 @@ export class GithubComponent implements OnInit {
           this.dataSource.data = res.data;
           this.isLoading = false;
 
-          if (updateColumns) {
+          if (updateColumns && res.data && res.data.length > 0) {
             console.log('Columns are updating......');
             this.displayedColumns = Object.keys(res.data[0] || {}).slice(0, 10);
-          };
+            this.availableFields = Object.keys(res.data[0] || {}).filter(col => col !== 'select' && col !== '_id');
+          }
         },
         error: error => {
           console.log("🚀 ~ GithubComponent ~ fetchData ~ error:", error)
@@ -164,6 +169,7 @@ export class GithubComponent implements OnInit {
   onEntityChange() {
     //reset search and sorting as well.
     this.resetpagination(true, true);
+    this.resetFilters();
     this.fetchData(true);
   };
 
@@ -200,6 +206,40 @@ export class GithubComponent implements OnInit {
     }
   }
 
+  onAddFilterRow() {
+    this.filterRows.push({ field: '', value: '' });
+  }
+
+  onRemoveFilterRow(index: number) {
+    this.filterRows.splice(index, 1);
+  }
+
+  onApplyFilters() {
+    // Convert filter rows to filter object
+    this.filters = {};
+    this.filterRows.forEach(filter => {
+      if (filter.field && filter.value) {
+        this.filters[filter.field] = filter.value;
+      }
+    });
+    this.pageIndex = 0;
+    this.fetchData(false);
+  }
+
+  onClearFilters() {
+    this.resetFilters();
+    this.fetchData(false);
+  }
+
+  resetFilters() {
+    this.filterRows = [];
+    this.filters = {};
+    this.pageIndex = 0;
+  }
+
+  getFilteredCount(): number {
+    return this.filterRows.filter(f => f.field && f.value).length;
+  }
 
 }
 

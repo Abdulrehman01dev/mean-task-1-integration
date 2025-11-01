@@ -14,7 +14,7 @@
 
       <span class="spacer"></span>
 
-      <button *ngIf="!isConnected" mat-flat-button color="primary" (click)="connect()"
+      <button *ngIf="!isConnected" mat-flat-button color="primary" (click)="onConnect()"
               matTooltip="Redirect to GitHub OAuth ">
         Connect
       </button>
@@ -42,11 +42,11 @@
       <mat-divider style="margin:12px 0"></mat-divider>
 
       <div class="actions">
-        <button mat-stroked-button color="warn" (click)="removeIntegration()" [disabled]="!isConnected">
+        <button mat-stroked-button color="warn" (click)="onRemoveIntegration()" [disabled]="!isConnected">
           Remove Integration
         </button>
 
-        <button mat-stroked-button color="primary" (click)="resync()" [disabled]="!isConnected">
+        <button mat-stroked-button color="primary" (click)="onResync()" [disabled]="!isConnected">
           Re-sync Integration
         </button>
       </div>
@@ -83,8 +83,50 @@
       </div>
     </div>
 
+    <!-- Filter Section -->
+    <div class="filter-section" style="padding:0 20px 20px 20px;border-top:1px solid #e0e0e0;margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-top:16px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <strong>Filters</strong>
+          <span *ngIf="getFilteredCount() > 0" style="color:#616161;font-size:12px">
+            ({{ getFilteredCount() }} active)
+          </span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button mat-stroked-button (click)="onAddFilterRow()" style="height:36px">
+            <mat-icon style="font-size:18px;width:18px;height:18px;margin-right:4px">add</mat-icon>
+            Add Filter
+          </button>
+          <button mat-stroked-button (click)="onApplyFilters()" [disabled]="getFilteredCount() === 0" color="primary" style="height:36px">
+            Apply Filters
+          </button>
+          <button mat-stroked-button (click)="onClearFilters()" [disabled]="filterRows.length === 0 && getFilteredCount() === 0" color="warn" style="height:36px">
+            Clear All
+          </button>
+        </div>
+      </div>
 
-
+      <div *ngIf="filterRows.length > 0" class="filter-rows">
+        <div *ngFor="let filter of filterRows; let i = index" class="filter-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <mat-form-field appearance="outline" style="width:200px;flex-shrink:0">
+            <mat-label>Field</mat-label>
+            <mat-select [(value)]="filter.field">
+              <mat-option *ngFor="let field of availableFields" [value]="field">{{ field | titlecase }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" style="flex:1">
+            <mat-label>Value</mat-label>
+            <input matInput [(ngModel)]="filter.value" placeholder="Enter filter value..." />
+          </mat-form-field>
+          <button mat-icon-button color="warn" (click)="onRemoveFilterRow(i)" matTooltip="Remove filter">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div *ngIf="filterRows.length === 0" class="no-filters" style="color:#757575;font-size:14px;padding:8px 0">
+        No filters added. Click "Add Filter" to add a filter.
+      </div>
+    </div>
 
     <div class="table-wrapper" style="overflow:auto;margin-top:8px; position: relative;">
       <table mat-table [dataSource]="dataSource" matSort  matSort (matSortChange)="onSort($event)" style="min-width:1200px">
@@ -103,6 +145,6 @@
         <mat-spinner diameter="40"></mat-spinner>
       </div>
     </div>
-    <mat-paginator [pageSize]="pageSize" [pageSizeOptions]="[10,25,50,100]" [length]="totalCount" (page)="onPageChange($event)"></mat-paginator>
+    <mat-paginator [pageSize]="pageSize" [pageSizeOptions]="[10,25,50,100]" [length]="totalCount" (page)="onPageChange($event)" [disabled]="isLoading"></mat-paginator>
   </mat-card>
 </section>

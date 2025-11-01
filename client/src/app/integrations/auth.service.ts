@@ -74,12 +74,13 @@ export class AuthService {
   }
 
 
-  getGithubData(collection: string, page = 1, limit = 10, search = '', sortField: string, sortDir: string) {
+  getGithubData(collection: string, page = 1, limit = 10, search = '', sortField: string, sortDir: string, filters: Record<string, any>) {
     const token = this.getToken();
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    const filtersStr = Object.keys(filters || {}).length > 0 ? JSON.stringify(filters) : undefined;
     return this.http.get(`${this.baseUrl}/github/data/${collection}`, {
       headers,
-      params: { page, limit, search, sortField, sortDir },
+      params: { page, limit, search, sortField, sortDir, ...(filtersStr && { filters: filtersStr }) },
     });
   }
   

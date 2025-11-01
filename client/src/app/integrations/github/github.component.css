@@ -77,3 +77,34 @@
   background: rgba(255, 255, 255, 0.6);
   z-index: 2;
 }
+
+.filter-section {
+  background-color: #fafafa;
+  border-radius: 4px;
+}
+
+.filter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.filter-row mat-form-field {
+  margin-bottom: 0;
+}
+
+.no-filters {
+  text-align: center;
+  padding: 16px;
+  color: #757575;
+}
