@@ -63,3 +63,17 @@
   min-width: 60px;
   max-width: 340px;
 }
+
+.table-wrapper {
+  position: relative;
+}
+
+.table-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 2;
+}

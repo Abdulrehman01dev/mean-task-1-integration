@@ -8,11 +8,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ViewChild } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -35,7 +36,8 @@ import { ActivatedRoute, Router } from '@angular/router';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './github.component.html',
   styleUrl: './github.component.css'
@@ -54,10 +56,13 @@ export class GithubComponent implements OnInit {
   ];
 
   dataSource = new MatTableDataSource<CommitRow>([]);
+  isLoading: boolean = true;
   totalCount: number = 0;
   pageIndex: number = 0;
   pageSize: number = 10;
   searchText: string = "";
+  sortField: string = "_id";
+  sortDir: string = "desc";
   selectedEntity: string = "github_commits";
   selectedActiveIntegration: string = "github";
 
@@ -119,22 +124,29 @@ export class GithubComponent implements OnInit {
     });
   };
 
-
   fetchData(updateColumns: boolean = false) {
     // if (!this.selectedEntity) return;
-    this.githubService.getGithubData(this.selectedEntity, this.pageIndex + 1, this.pageSize, this.searchText)
-      .subscribe((res: any) => {
-        this.totalCount = res.total || 0;
-        this.dataSource.data = res.data;
+    this.isLoading = true;
+    this.githubService.getGithubData(this.selectedEntity, this.pageIndex + 1, this.pageSize, this.searchText, this.sortField, this.sortDir).pipe()
+      .subscribe({
+        next: (res: any) => {
+          console.log("🚀 ~ GithubComponent ~ fetchData ~ res:", res)
+          this.totalCount = res.total || 0;
+          this.dataSource.data = res.data;
+          this.isLoading = false;
 
-        if (updateColumns) {
-          console.log('Columns are updating......');
-          this.displayedColumns = Object.keys(res.data[0] || {}).slice(0, 10);
-        };
-
-        console.log("🚀 ~ GithubComponent ~ fetchData ~ totalCount:", this.totalCount)
+          if (updateColumns) {
+            console.log('Columns are updating......');
+            this.displayedColumns = Object.keys(res.data[0] || {}).slice(0, 10);
+          };
+        },
+        error: error => {
+          console.log("🚀 ~ GithubComponent ~ fetchData ~ error:", error)
+          this.isLoading = false;
+        }
       });
   }
+
 
   applyFilter(value: string): void {
     this.searchText = value.trim().toLowerCase();
@@ -150,21 +162,38 @@ export class GithubComponent implements OnInit {
   }
 
   onEntityChange() {
-    this.resetpagination(true);
+    //reset search and sorting as well.
+    this.resetpagination(true, true);
     this.fetchData(true);
   };
 
   onActiveIntegrationChange() {
     // static list for now 
+  };
+
+  onSort(sortState: Sort) {
+    if (sortState.direction) {
+      this.sortField = sortState.active
+      this.sortDir = sortState.direction;
+      this.fetchData(false)
+      console.log(`Sorted ${sortState.direction}ending and applied on ${this.sortField}`);
+
+    } else {
+      console.log('Sorting cleared');
+    }
   }
 
-  resetpagination(resetQuery: boolean = false) {
+  resetpagination(resetQuery: boolean = false, resetSort: boolean = false) {
     this.totalCount = 0;
     this.pageIndex = 0;
     this.pageSize = 10;
     if (resetQuery) {
       this.searchText = "";
     };
+    if (resetSort) {
+      this.sortField = "_id";
+      this.sortDir = "desc";
+    }
     if (this.paginator) {
       this.paginator.pageIndex = 0;
       this.paginator.pageSize = this.pageSize;
