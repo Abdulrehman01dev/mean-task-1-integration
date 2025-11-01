@@ -80,6 +80,7 @@ export class GithubComponent implements OnInit {
     { name: "Issues", value: "github_issues" },
     { name: "Users", value: "github_users" },
     { name: "Organizations", value: "github_organizations" },
+    { name: "Changelogs", value: "github_issues_changelog" },
   ]
 
   activeIntegrations: { name: string, value: string }[] = [

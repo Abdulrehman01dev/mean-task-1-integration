@@ -4,6 +4,7 @@ const GithubRepo = require("../models/GithubRepo");
 const GithubCommit = require("../models/GithubCommit");
 const GithubPull = require("../models/GithubPull");
 const GithubIssue = require("../models/GithubIssue");
+const GithubIssueChangelog = require("../models/GithubIssueChangelog");
 const GithubUser = require("../models/GithubUser");
 const { createGhApi } = require("../helpers/ghApi");
 const catchAsync = require("../helpers/catchAsync");
@@ -31,10 +32,11 @@ const syncGithubData = catchAsync(async (req, res) => {
       await GithubRepo.insertMany(repos.map((r) => ({ ...r, createdBy })));
 
       for (const repo of repos) {
-        const [commits, pulls, issues] = await Promise.all([
+        const [commits, pulls, issues, changelogs ] = await Promise.all([
           gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`).then(r => r.data).catch(() => []),
           gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`).then(r => r.data).catch(() => []),
           gh.get(`/repos/${org.login}/${repo.name}/issues?state=all&per_page=100`).then(r => r.data).catch(() => []),
+          gh.get(`/repos/${org.login}/${repo.name}/issues/events?per_page=100`).then(r => r.data).catch(() => []),
         ]);
 
         if (commits.length)
@@ -45,6 +47,9 @@ const syncGithubData = catchAsync(async (req, res) => {
 
         if (issues.length)
           await GithubIssue.insertMany(issues.map(r => ({ ...r, createdBy })));
+
+        if (changelogs.length)
+          await GithubIssueChangelog.insertMany(changelogs.map(r => ({ ...r, createdBy })));
       }
     }
 
@@ -73,6 +78,7 @@ const getCollectionData = catchAsync(async (req, res) => {
     github_pulls: GithubPull,
     github_users: GithubUser,
     github_organizations: GithubOrganization,
+    github_issues_changelog: GithubIssueChangelog,
   };
   const Model = colMap[collection];
   if (!Model) return res.status(400).json({ error: "Invalid collection" });
