@@ -9,5 +9,7 @@ router.post("/resync", authMiddleware, githubDataController.syncGithubData);
 router.get("/data/:collection", authMiddleware, githubDataController.getCollectionData);
 // Delete github data
 router.delete("/remove", authMiddleware, githubDataController.removeIntegration);
+// Search data across all collections
+router.get("/search", authMiddleware, githubDataController.removeIntegration);
 
 module.exports = router;

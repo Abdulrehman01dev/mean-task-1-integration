@@ -191,8 +191,25 @@ const removeIntegration = catchAsync(async (req, res) => {
 });
 
 
+const searchDataGlobally = async (req, res) => {
+  const q = req.query.q || "";
+  const regex = new RegExp(q, "i");
+  const createdBy = req.integration.login;
+
+  const [commits, pulls, issues, repos, users] = await Promise.all([
+    GithubCommit.find({ createdBy, message: regex }).limit(10),
+    GithubPull.find({ createdBy, title: regex }).limit(10),
+    GithubIssue.find({ createdBy, title: regex }).limit(10),
+    GithubRepo.find({ createdBy, name: regex }).limit(10),
+    GithubUser.find({ createdBy, login: regex }).limit(10),
+  ]);
+
+  res.json({ commits, pulls, issues, repos, users });
+};
+
 module.exports = {
   syncGithubData,
   getCollectionData,
-  removeIntegration
+  removeIntegration,
+  searchDataGlobally
 }
