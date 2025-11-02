@@ -12,7 +12,7 @@ const createGhApi = (token) => {
   instance.interceptors.response.use(
     (res) => res,
     async (err) => {
-      console.log("🚀 ~ GitHub API Error:", err?.response?.status, err?.message);
+      console.log("🚀 ~ GitHub API Error:", err?.response?.status, err);
 
       if (err.response?.status === 401 && token) {
         await GithubIntegration.deleteOne({ accessToken: token });

@@ -14,8 +14,7 @@
 
       <span class="spacer"></span>
 
-      <button *ngIf="!isConnected" mat-flat-button color="primary" (click)="onConnect()"
-              matTooltip="Redirect to GitHub OAuth ">
+      <button *ngIf="!isConnected" mat-flat-button color="primary" (click)="onConnect()" matTooltip="Redirect to GitHub OAuth ">
         Connect
       </button>
     </div>
@@ -43,11 +42,13 @@
 
       <div class="actions">
         <button mat-stroked-button color="warn" (click)="onRemoveIntegration()" [disabled]="!isConnected">
-          Remove Integration
+          {{!isRemoving ? 'Remove Integration' : null}}
+          <mat-spinner diameter="20" mode="indeterminate" color="primary" *ngIf="isRemoving"></mat-spinner>
         </button>
 
         <button mat-stroked-button color="primary" (click)="onResync()" [disabled]="!isConnected">
-          Re-sync Integration
+          {{!isSyncing ? 'Re-sync Integration' : null}}
+          <mat-spinner diameter="20" mode="indeterminate" color="primary" *ngIf="isSyncing"></mat-spinner>
         </button>
       </div>
 

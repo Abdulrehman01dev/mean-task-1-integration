@@ -10,10 +10,28 @@ const { createGhApi } = require("../helpers/ghApi");
 const catchAsync = require("../helpers/catchAsync");
 
 
-const isDateField = (field) => {
-  const commonFields = ['updated_at', 'created_at', 'createdAt', 'updatedAt', 'merged_at', 'pushed_at', 'user', 'labels',]
-  return commonFields.includes(field?.toString()?.trim())
+const fetchAllPages = async(gh, url, extraParams="") => {
+  let page = 1;
+  let results = [];
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data } = await gh.get(`${url}?per_page=100&page=${page}${extraParams}`).catch(() => ({ data: [] }));
+    if (data.length === 0) {
+      hasMore = false;
+    } else {
+      results = results.concat(data);
+      page++;
+      // Just a Small delay
+      if(remainingTime > 0 ){
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
+  }
+
+  return results;
 }
+
 
 const syncGithubData = catchAsync(async (req, res) => {
   try {
@@ -38,10 +56,10 @@ const syncGithubData = catchAsync(async (req, res) => {
 
       for (const repo of repos) {
         const [commits, pulls, issues, changelogs ] = await Promise.all([
-          gh.get(`/repos/${org.login}/${repo.name}/commits?per_page=100`).then(r => r.data).catch(() => []),
-          gh.get(`/repos/${org.login}/${repo.name}/pulls?state=all&per_page=100`).then(r => r.data).catch(() => []),
-          gh.get(`/repos/${org.login}/${repo.name}/issues?state=all&per_page=100`).then(r => r.data).catch(() => []),
-          gh.get(`/repos/${org.login}/${repo.name}/issues/events?per_page=100`).then(r => r.data).catch(() => []),
+          fetchAllPages(gh, `/repos/${org.login}/${repo.name}/commits`),
+          fetchAllPages(gh, `/repos/${org.login}/${repo.name}/pulls?state=all`),
+          fetchAllPages(gh, `/repos/${org.login}/${repo.name}/issues`, "&state=all"),
+          fetchAllPages(gh, `/repos/${org.login}/${repo.name}/issues/events`),
         ]);
 
         const userMap = new Map();
@@ -94,7 +112,6 @@ const syncGithubData = catchAsync(async (req, res) => {
     res.status(500).json({ error: err.message || "Error syncing GitHub data" });
   }
 });
-
 
 
 const getCollectionData = catchAsync(async (req, res) => {

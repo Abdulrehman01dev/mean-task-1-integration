@@ -1,6 +1,8 @@
 .status-row {
   display: flex;
   align-items: center;
+  padding: 10px;
+  margin-bottom: 0px;
 }
 .status-indicator {
   width: 10px;

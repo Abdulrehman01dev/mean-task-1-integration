@@ -60,6 +60,8 @@ export class GithubComponent implements OnInit {
 
   dataSource = new MatTableDataSource<CommitRow>([]);
   isLoading: boolean = false;
+  isSyncing: boolean = false;
+  isRemoving: boolean = false;
   totalCount: number = 0;
   pageIndex: number = 0;
   pageSize: number = 10;
@@ -121,18 +123,31 @@ export class GithubComponent implements OnInit {
   }
 
   onRemoveIntegration(): void {
-    this.githubService.removeIntegration().subscribe(() => {
+    this.isRemoving = true;
+    this.githubService.removeIntegration().subscribe({
+      next: (res) => {
       this.isConnected = false;
       this.connectedUser = { url: "", login: "", connectedAt: undefined };
       this.dataSource.data = [];
       localStorage.removeItem('githubToken');
+      },
+      error: (err) => console.error(err),
+      complete: () => this.isRemoving = false
+      
+
     });
   }
 
   onResync(): void {
-    this.githubService.resyncIntegration().subscribe((res) => {
-      this.fetchData(true);
-    });
+    this.isSyncing = true;
+    this.githubService.resyncIntegration().subscribe(({
+      next: (res) => {
+        console.log("Resync response:", res);
+        this.fetchData(true);
+      },
+      error: (err) => console.error(err),
+      complete: () => this.isSyncing = false
+    }));
   };
 
   fetchData(updateColumns: boolean = false) {
