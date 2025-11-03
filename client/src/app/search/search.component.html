@@ -1,84 +1,106 @@
-<div>
-  <mat-card>
-    <mat-form-field style="width: 100%;">
-      <input matInput
-             placeholder="Search GitHub data..."
-             [(ngModel)]="searchText"
-             (keyup.enter)="onSearch()">
-    </mat-form-field>
-    <button mat-raised-button
-            color="primary"
-            (click)="onSearch()"
-            [disabled]="loading">
-      Search
-    </button>
+<div class="github-search-container">
+  <mat-card class="search-card">
+    <div class="search-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search GitHub data...</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchText"
+          (keyup.enter)="onSearch()"
+          placeholder="e.g. angular, nodejs, etc."
+        />
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        color="primary"
+        class="search-btn"
+        (click)="onSearch()"
+        [disabled]="loading"
+      >
+        <!-- <mat-icon>search</mat-icon> -->
+        Search
+      </button>
+    </div>
   </mat-card>
 
-  <div *ngIf="error" class="error">{{error}}</div>
   <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+  <div *ngIf="error" class="error">{{ error }}</div>
 
-  <div *ngIf="results">
+  <!-- Results Section -->
+  <div *ngIf="results" class="results-section">
+
     <!-- Commits -->
-    <mat-card *ngIf="results.commits && results.commits.length">
+    <mat-card *ngIf="results.commits?.length" class="result-card">
       <mat-card-title>Commits</mat-card-title>
+      <mat-divider></mat-divider>
       <mat-list>
         <mat-list-item *ngFor="let commit of results.commits">
           <div mat-line>
-            <a href="{{commit.html_url}}" target="_blank">{{commit.message | slice:0:80}}{{commit.message.length > 80 ? '...' : ''}}</a>
+            <a [href]="commit.html_url" target="_blank">
+              {{ commit.message | slice: 0: 80 }}{{ commit.message.length > 80 ? '...' : '' }}
+            </a>
           </div>
-          <div mat-line class="secondary">Repo: {{commit.repoName}}, Org: {{commit.orgName}}</div>
+          <div mat-line class="secondary">
+            Repo: {{ commit.repoName }} | Org: {{ commit.orgName }}
+          </div>
         </mat-list-item>
       </mat-list>
     </mat-card>
-    <mat-divider></mat-divider>
 
     <!-- Issues -->
-    <mat-card *ngIf="results.issues && results.issues.length">
+    <mat-card *ngIf="results.issues?.length" class="result-card">
       <mat-card-title>Issues</mat-card-title>
+      <mat-divider></mat-divider>
       <mat-list>
         <mat-list-item *ngFor="let issue of results.issues">
-          <img mat-list-avatar *ngIf="issue.user?.avatar_url" [src]="issue.user.avatar_url" width="32" height="32">
-          <div mat-line>{{issue.title}}</div>
-          <div mat-line class="secondary">Repo: {{issue.repoName}}, Org: {{issue.orgName}}, by: {{issue.user?.login}}</div>
+          <img matListAvatar *ngIf="issue.user?.avatar_url" [src]="issue.user.avatar_url" width="40" height="40" />
+          <div mat-line>{{ issue.title }}</div>
+          <div mat-line class="secondary">
+            Repo: {{ issue.repoName }} | Org: {{ issue.orgName }} | by {{ issue.user?.login }}
+          </div>
         </mat-list-item>
       </mat-list>
     </mat-card>
-    <mat-divider></mat-divider>
 
-    <!-- Repos -->
-    <mat-card *ngIf="results.repos && results.repos.length">
+    <!-- Repositories -->
+    <mat-card *ngIf="results.repos?.length" class="result-card">
       <mat-card-title>Repositories</mat-card-title>
+      <mat-divider></mat-divider>
       <mat-list>
         <mat-list-item *ngFor="let repo of results.repos">
           <div mat-line>
-            <a href="{{repo.html_url}}" target="_blank">{{repo.full_name || repo.name}}</a>
+            <a [href]="repo.html_url" target="_blank">{{ repo.full_name || repo.name }}</a>
           </div>
-          <div mat-line class="secondary">Lang: {{repo.language}}, Private: {{repo.private ? 'Yes' : 'No'}}</div>
+          <div mat-line class="secondary">
+            Lang: {{ repo.language }} | Private: {{ repo.private ? 'Yes' : 'No' }}
+          </div>
         </mat-list-item>
       </mat-list>
     </mat-card>
-    <mat-divider></mat-divider>
 
     <!-- Users -->
-    <mat-card *ngIf="results.users && results.users.length">
+    <mat-card *ngIf="results.users?.length" class="result-card">
       <mat-card-title>Users</mat-card-title>
+      <mat-divider></mat-divider>
       <mat-list>
         <mat-list-item *ngFor="let user of results.users">
-          <img mat-list-avatar *ngIf="user.avatar_url" [src]="user.avatar_url" width="32" height="32">
-          <div mat-line>{{user.login}}</div>
+          <img matListAvatar *ngIf="user.avatar_url" [src]="user.avatar_url" width="40" height="40" />
+          <div mat-line style="margin-bottom: 0.9rem;">{{ user.login }}</div>
         </mat-list-item>
       </mat-list>
     </mat-card>
-    <mat-divider></mat-divider>
 
     <!-- Organizations -->
-    <mat-card *ngIf="results.organizations && results.organizations.length">
+    <mat-card *ngIf="results.organizations?.length" class="result-card">
       <mat-card-title>Organizations</mat-card-title>
+      <mat-divider></mat-divider>
       <mat-list>
         <mat-list-item *ngFor="let org of results.organizations">
-          <div mat-line>{{org.name}}</div>
+          <div mat-line>{{ org.name }}</div>
         </mat-list-item>
       </mat-list>
     </mat-card>
+
   </div>
 </div>

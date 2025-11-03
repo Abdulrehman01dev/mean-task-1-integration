@@ -1,0 +1,73 @@
+.github-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+
+  .search-card {
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .search-field {
+      flex: 1;
+    }
+
+    .search-btn {
+      min-width: 120px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .results-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 1rem;
+
+    .result-card {
+      border-radius: 1rem;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      mat-card-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .secondary {
+        font-size: 0.85rem;
+        color: #666;
+      }
+
+      mat-list-item {
+        a {
+          color: #1565c0;
+          text-decoration: none;
+        }
+
+        a:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .error {
+    color: #e53935;
+    font-weight: 500;
+    text-align: center;
+  }
+}
