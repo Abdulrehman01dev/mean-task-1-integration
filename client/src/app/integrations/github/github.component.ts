@@ -16,9 +16,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ViewChild } from '@angular/core';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../../_services/auth.service';
+import { GithubService } from '../../_services/github.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { CommitRow } from '../../_models/commit';
 
 @Component({
   selector: 'app-github',
@@ -58,7 +60,7 @@ export class GithubComponent implements OnInit {
     'select', 'id', 'hash', 'branch', 'message', 'date', 'repoName', 'repoUid', 'authorUid', 'authorName', 'pullrequest', 'url', 'checksum'
   ];
 
-  dataSource = new MatTableDataSource<CommitRow>([]);
+  dataSource = new MatTableDataSource<any>([]);
   isLoading: boolean = false;
   isSyncing: boolean = false;
   isRemoving: boolean = false;
@@ -92,7 +94,7 @@ export class GithubComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private githubService: AuthService, private route: ActivatedRoute, private router: Router) { }
+  constructor(private authService: AuthService, private githubService: GithubService, private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit(): void {
 
@@ -103,14 +105,14 @@ export class GithubComponent implements OnInit {
     });
 
 
-    this.githubService.connected$.subscribe(isConn => {
+    this.authService.connected$.subscribe(isConn => {
       this.isConnected = !!isConn;
       if (isConn) {
         this.fetchData(true);
       };
     });
 
-    this.githubService.user$.subscribe(user => {
+    this.authService.user$.subscribe(user => {
       console.log("🚀 ~ GithubComponent ~ ngOnInit ~ user:", user)
       if (user) {
         this.connectedUser = { url: user.url, login: user.login, connectedAt: user?.connectedAt };
@@ -119,7 +121,7 @@ export class GithubComponent implements OnInit {
   }
 
   onConnect(): void {
-    this.githubService.connectGithub();
+    this.authService.connectGithub();
   }
 
   onRemoveIntegration(): void {
@@ -261,19 +263,4 @@ export class GithubComponent implements OnInit {
     return this.filterRows.filter(f => f.field && f.value).length;
   }
 
-}
-
-interface CommitRow {
-  id: string;
-  hash: string;
-  branch: string;
-  message: string;
-  date: string; // ISO
-  repoName: string;
-  repoUid: string;
-  authorUid: string;
-  authorName: string;
-  pullrequest: string;
-  url: string;
-  checksum: string;
 }

@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, catchError, finalize, map, of, tap } from 'rxjs';
+import { GITHUB_API_URL } from '../constants/api';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:3000/api/v1';
 
   // Global states
   private loadingSubject = new BehaviorSubject<boolean>(false);
@@ -20,7 +20,7 @@ export class AuthService {
 
 
   connectGithub(): void {
-    this.http.get<{ url: string }>(`${this.baseUrl}/auth/github/oauth/url`)
+    this.http.get<{ url: string }>(`${GITHUB_API_URL}/auth/github/oauth/url`)
       .pipe(map(res => res.url)).subscribe(url => {
       if (url) {
         window.location.href = url;
@@ -31,14 +31,14 @@ export class AuthService {
 
   verifyOAuthToken(code: string) {
     // Not used when server redirects; kept for API completeness
-    return this.http.get<{ url: string }>(`${this.baseUrl}/auth/github/oauth/callback?code=${encodeURIComponent(code)}`);
+    return this.http.get<{ url: string }>(`${GITHUB_API_URL}/auth/github/oauth/callback?code=${encodeURIComponent(code)}`);
   };
 
 
   authenticate() {
     const token = this.getToken();
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    return this.http.get<{ connected: boolean; user?: any; reason?: string }>(`${this.baseUrl}/auth/authenticate`, { headers });
+    return this.http.get<{ connected: boolean; user?: any; reason?: string }>(`${GITHUB_API_URL}/auth/authenticate`, { headers });
   }
 
 
@@ -71,41 +71,6 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem('githubToken');
-  }
-
-
-  getGithubData(collection: string, page = 1, limit = 10, search = '', sortField: string, sortDir: string, filters: Record<string, any>) {
-    const token = this.getToken();
-    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    const filtersStr = Object.keys(filters || {}).length > 0 ? JSON.stringify(filters) : undefined;
-    return this.http.get(`${this.baseUrl}/github/data/${collection}`, {
-      headers,
-      params: { page, limit, search, sortField, sortDir, ...(filtersStr && { filters: filtersStr }) },
-    });
-  }
-  
-  
-  resyncIntegration() {
-    const token = this.getToken();
-    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    return this.http.post(`${this.baseUrl}/github/resync`, {}, { headers });
-  };
-  
-
-  removeIntegration() {
-    const token = this.getToken();
-    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    return this.http.delete(`${this.baseUrl}/github/remove`,  { headers });
-  };
-  
-
-  searchGlobalData(query: string) {
-    const token = this.getToken();
-    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
-    return this.http.get<any>(`${this.baseUrl}/github/search`, {
-      headers,
-      params: { q: query }
-    });
   }
 
 }

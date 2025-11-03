@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { AuthService } from '../integrations/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
@@ -10,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { GithubService } from '../_services/github.service';
 
 @Component({
   selector: 'app-search',
@@ -22,18 +22,20 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
   templateUrl: './search.component.html',
   styleUrl: './search.component.css'
 })
+
+
 export class SearchComponent {
   searchText = '';
   results: any = null;
   loading = false;
   error = '';
 
-  constructor(private auth: AuthService) {}
+  constructor(private githubService: GithubService) {}
 
   onSearch() {
     this.loading = true;
     this.error = '';
-    this.auth.searchGlobalData(this.searchText).subscribe({
+    this.githubService.searchGlobalData(this.searchText).subscribe({
       next: (data) => { this.results = data; this.loading = false; },
       error: (err) => {
         this.error = 'Search failed';

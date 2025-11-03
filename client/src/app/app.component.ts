@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { CommonModule, NgIf } from '@angular/common';
-import { AuthService } from './integrations/auth.service';
+import { AuthService } from './_services/auth.service';
 
 @Component({
   selector: 'app-root',
