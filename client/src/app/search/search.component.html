@@ -1,0 +1,84 @@
+<div>
+  <mat-card>
+    <mat-form-field style="width: 100%;">
+      <input matInput
+             placeholder="Search GitHub data..."
+             [(ngModel)]="searchText"
+             (keyup.enter)="onSearch()">
+    </mat-form-field>
+    <button mat-raised-button
+            color="primary"
+            (click)="onSearch()"
+            [disabled]="loading">
+      Search
+    </button>
+  </mat-card>
+
+  <div *ngIf="error" class="error">{{error}}</div>
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+  <div *ngIf="results">
+    <!-- Commits -->
+    <mat-card *ngIf="results.commits && results.commits.length">
+      <mat-card-title>Commits</mat-card-title>
+      <mat-list>
+        <mat-list-item *ngFor="let commit of results.commits">
+          <div mat-line>
+            <a href="{{commit.html_url}}" target="_blank">{{commit.message | slice:0:80}}{{commit.message.length > 80 ? '...' : ''}}</a>
+          </div>
+          <div mat-line class="secondary">Repo: {{commit.repoName}}, Org: {{commit.orgName}}</div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+    <mat-divider></mat-divider>
+
+    <!-- Issues -->
+    <mat-card *ngIf="results.issues && results.issues.length">
+      <mat-card-title>Issues</mat-card-title>
+      <mat-list>
+        <mat-list-item *ngFor="let issue of results.issues">
+          <img mat-list-avatar *ngIf="issue.user?.avatar_url" [src]="issue.user.avatar_url" width="32" height="32">
+          <div mat-line>{{issue.title}}</div>
+          <div mat-line class="secondary">Repo: {{issue.repoName}}, Org: {{issue.orgName}}, by: {{issue.user?.login}}</div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+    <mat-divider></mat-divider>
+
+    <!-- Repos -->
+    <mat-card *ngIf="results.repos && results.repos.length">
+      <mat-card-title>Repositories</mat-card-title>
+      <mat-list>
+        <mat-list-item *ngFor="let repo of results.repos">
+          <div mat-line>
+            <a href="{{repo.html_url}}" target="_blank">{{repo.full_name || repo.name}}</a>
+          </div>
+          <div mat-line class="secondary">Lang: {{repo.language}}, Private: {{repo.private ? 'Yes' : 'No'}}</div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+    <mat-divider></mat-divider>
+
+    <!-- Users -->
+    <mat-card *ngIf="results.users && results.users.length">
+      <mat-card-title>Users</mat-card-title>
+      <mat-list>
+        <mat-list-item *ngFor="let user of results.users">
+          <img mat-list-avatar *ngIf="user.avatar_url" [src]="user.avatar_url" width="32" height="32">
+          <div mat-line>{{user.login}}</div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+    <mat-divider></mat-divider>
+
+    <!-- Organizations -->
+    <mat-card *ngIf="results.organizations && results.organizations.length">
+      <mat-card-title>Organizations</mat-card-title>
+      <mat-list>
+        <mat-list-item *ngFor="let org of results.organizations">
+          <div mat-line>{{org.name}}</div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card>
+  </div>
+</div>

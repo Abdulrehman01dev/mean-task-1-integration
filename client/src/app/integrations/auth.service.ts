@@ -99,4 +99,13 @@ export class AuthService {
   };
   
 
+  searchGlobalData(query: string) {
+    const token = this.getToken();
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    return this.http.get<any>(`${this.baseUrl}/github/search`, {
+      headers,
+      params: { q: query }
+    });
+  }
+
 }

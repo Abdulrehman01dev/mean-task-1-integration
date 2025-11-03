@@ -10,6 +10,6 @@ router.get("/data/:collection", authMiddleware, githubDataController.getCollecti
 // Delete github data
 router.delete("/remove", authMiddleware, githubDataController.removeIntegration);
 // Search data across all collections
-router.get("/search", authMiddleware, githubDataController.removeIntegration);
+router.get("/search", authMiddleware, githubDataController.searchDataGlobally);
 
 module.exports = router;
