@@ -84,6 +84,7 @@ export class AuthService {
     });
   }
   
+  
   resyncIntegration() {
     const token = this.getToken();
     const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;

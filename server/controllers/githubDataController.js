@@ -13,19 +13,17 @@ const catchAsync = require("../helpers/catchAsync");
 const fetchAllPages = async(gh, url, extraParams="") => {
   let page = 1;
   let results = [];
-  let hasMore = true;
+  let hasMoreItems = true;
 
-  while (hasMore) {
+  while (hasMoreItems) {
     const { data } = await gh.get(`${url}?per_page=100&page=${page}${extraParams}`).catch(() => ({ data: [] }));
     if (data.length === 0) {
-      hasMore = false;
+      hasMoreItems = false;
     } else {
       results = results.concat(data);
       page++;
       // Just a Small delay
-      if(remainingTime > 0 ){
-        await new Promise(r => setTimeout(r, 300));
-      }
+      await new Promise(r => setTimeout(r, 300));
     }
   }
 
@@ -39,10 +37,15 @@ const syncGithubData = catchAsync(async (req, res) => {
     const token = req.integration.accessToken;
     const gh = createGhApi(token);
 
+    const removeDataResult = await removeData(createdBy);
+    if (!removeDataResult) {
+      return res.status(500).json({ message: "Failed to remove previous data" });
+    };
+    console.log("Removed previous data successfully");
+
     const { data: orgs } = await gh.get("/user/orgs");
     console.log("🚀 ~ syncGithubData ~ total org:", orgs.length);
 
-    await GithubOrganization.deleteMany({ createdBy });
     if (orgs.length) {
       await GithubOrganization.insertMany(orgs.map(o => ({ ...o, createdBy })));
     } else {
@@ -176,36 +179,51 @@ const getCollectionData = catchAsync(async (req, res) => {
 const removeIntegration = catchAsync(async (req, res) => {
   const login = req.integration.login;
 
-  await GithubIntegration.deleteOne({ login });
-  // also clear all user-specific data
-  await Promise.all([
-    GithubRepo.deleteMany({ createdBy: login }),
-    GithubCommit.deleteMany({ createdBy: login }),
-    GithubIssue.deleteMany({ createdBy: login }),
-    GithubPull.deleteMany({ createdBy: login }),
-    GithubOrganization.deleteMany({ createdBy: login }),
-    GithubUser.deleteMany({ createdBy: login }),
-    GithubIssueChangelog.deleteMany({ createdBy: login })
-  ]);
-  res.json({ message: "Integration removed successfully" });
+  const result = await removeData(login);
+  if (result) {
+    await GithubIntegration.deleteOne({ login });
+    res.status(200).json({ message: "Integration removed successfully" });
+  } else {
+    res.status(500).json({ message: "Failed to remove integration" });
+  }
 });
 
+const removeData = async (login) =>{
+  try {
+    // also clear all user-specific data
+    await Promise.all([
+      GithubRepo.deleteMany({ createdBy: login }),
+      GithubCommit.deleteMany({ createdBy: login }),
+      GithubIssue.deleteMany({ createdBy: login }),
+      GithubPull.deleteMany({ createdBy: login }),
+      GithubOrganization.deleteMany({ createdBy: login }),
+      GithubUser.deleteMany({ createdBy: login }),
+      GithubIssueChangelog.deleteMany({ createdBy: login })
+    ]);
+    return true;
+  } catch (error) {
+    console.error("removeData error:", error);
+    return false;
+  }
+}
 
-const searchDataGlobally = async (req, res) => {
+
+const searchDataGlobally = catchAsync(async (req, res) => {
   const q = req.query.q || "";
   const regex = new RegExp(q, "i");
   const createdBy = req.integration.login;
 
-  const [commits, pulls, issues, repos, users] = await Promise.all([
+  const [commits, pulls, issues, repos, users, organizations] = await Promise.all([
     GithubCommit.find({ createdBy, message: regex }).limit(10),
     GithubPull.find({ createdBy, title: regex }).limit(10),
     GithubIssue.find({ createdBy, title: regex }).limit(10),
     GithubRepo.find({ createdBy, name: regex }).limit(10),
     GithubUser.find({ createdBy, login: regex }).limit(10),
+    GithubOrganization.find({ createdBy, name: regex }).limit(10),
   ]);
 
-  res.json({ commits, pulls, issues, repos, users });
-};
+  res.json({ commits, pulls, issues, repos, users, organizations });
+});
 
 module.exports = {
   syncGithubData,
