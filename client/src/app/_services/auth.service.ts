@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, catchError, finalize, map, of, tap } from 'rxjs';
-import { GITHUB_API_URL } from '../constants/api';
+import { GITHUB_API_URL } from '../_constants/api';
 
 @Injectable({
   providedIn: 'root'

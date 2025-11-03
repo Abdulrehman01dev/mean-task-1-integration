@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { GITHUB_API_URL } from '../constants/api';
+import { GITHUB_API_URL } from '../_constants/api';
 
 
 @Injectable({

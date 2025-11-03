@@ -237,7 +237,7 @@ export class GithubComponent implements OnInit {
   }
 
   onApplyFilters() {
-    // Convert filter rows to filter object
+    // Converting the filter rows to filter object
     this.filters = {};
     this.filterRows.forEach(filter => {
       if (filter.field && filter.value) {
