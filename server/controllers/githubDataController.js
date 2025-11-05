@@ -144,7 +144,7 @@ const getCollectionData = catchAsync(async (req, res) => {
   if (Object.keys(filterObj)?.length > 0) {
     Object.keys(filterObj).forEach((key, i) => {
       const value = filterObj[key];
-      const regex = new RegExp(value, "i");
+      const regex = new RegExp(value?.trim(), "i");
       if (!isNaN(Date.parse(value))) {
         query[key] = value;
       }
@@ -158,7 +158,7 @@ const getCollectionData = catchAsync(async (req, res) => {
   };
 
   if (search) {
-    const regex = new RegExp(search, "i");
+    const regex = new RegExp(search?.trim(), "i");
     query.$or = [{ login: regex }, { message: regex }, { name: regex }, { title: regex }];
   };
 
