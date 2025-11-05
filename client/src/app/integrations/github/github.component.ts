@@ -21,6 +21,7 @@ import { GithubService } from '../../_services/github.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { CommitRow } from '../../_models/commit';
+import { DynamicTableComponent } from "../../_components/dynamic-table/dynamic-table.component";
 
 @Component({
   selector: 'app-github',
@@ -35,15 +36,16 @@ import { CommitRow } from '../../_models/commit';
     MatDividerModule,
     MatIconModule,
     MatTooltipModule,
-    MatTableModule,
     MatPaginatorModule,
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule
-  ],
+    MatProgressSpinnerModule,
+    DynamicTableComponent,
+    DynamicTableComponent,
+],
   templateUrl: './github.component.html',
   styleUrl: './github.component.css'
 })
@@ -55,7 +57,7 @@ export class GithubComponent implements OnInit {
     connectedAt: undefined,
   }
 
-  // Dummy grid data
+  // Default grid data
   displayedColumns: string[] = [
     'select', 'id', 'hash', 'branch', 'message', 'date', 'repoName', 'repoUid', 'authorUid', 'authorName', 'pullrequest', 'url', 'checksum'
   ];
@@ -176,7 +178,6 @@ export class GithubComponent implements OnInit {
       });
   }
 
-
   onApplyFilter(value: string): void {
     this.searchSubject.next(value);
   }
@@ -195,9 +196,7 @@ export class GithubComponent implements OnInit {
     this.fetchData(true);
   };
 
-  onActiveIntegrationChange() {
-    // static list for now 
-  };
+  onActiveIntegrationChange() { };
 
   onSort(sortState: Sort) {
     if (sortState.direction) {
